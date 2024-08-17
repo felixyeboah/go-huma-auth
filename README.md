@@ -39,7 +39,7 @@ Create a database and run the migrations located in the migrations/ directory.
 4. **Run the Application:**
 
 ```bash
-go run cmd/main.go
+go run cmd/server/main.go
 ```
 
 ## Project Structure
