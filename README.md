@@ -22,7 +22,7 @@ This project is a RESTful API built using Go, leveraging the Huma and Chi librar
 
    ```bash
    git clone https://github.com/felixyeboah/go-huma-auth.git
-   cd yourproject
+   cd go-huma-auth
    ```
 
 2. **Set Up the Database:**
