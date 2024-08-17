@@ -45,7 +45,7 @@ go run cmd/main.go
 ## Project Structure
 
 ```bash
-tellmonifa/
+go-huma-auth/
 ├── cmd/
 │   └── main.go
 ├── config/
