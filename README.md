@@ -65,8 +65,12 @@ go-huma-auth/
 │   │   ├── db.go
 │   └── utils/
 │       └── utils.go
+├── sql
+│   ├── queries/
+│   ├── sqlc/
 ├── go.mod
 ├── go.sum
+├── Makefile
 └── sqlc.yaml
 ```
 
