@@ -17,14 +17,6 @@ func NewRepository(queries db.Querier) Repository {
 	}
 }
 
-type User struct {
-	Name        string `json:"name"`
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
-	RoleName    string `json:"role_name"`
-}
-
 // CreateUser adds a new user
 func (repo *Repository) CreateUser(ctx context.Context, user User) (*db.User, error) {
 	// Check if user exists
@@ -51,6 +43,8 @@ func (repo *Repository) CreateUser(ctx context.Context, user User) (*db.User, er
 	if err != nil {
 		return nil, errors.New("failed to create user")
 	}
+
+	// TODO: generate a validation token, save in redis and send to the user via email
 
 	return &db.User{
 		ID:          u.ID,
