@@ -47,7 +47,8 @@ go run cmd/server/main.go
 ```bash
 go-huma-auth/
 ├── cmd/
-│   └── main.go
+│   └── server/
+│       └── main.go
 ├── config/
 │   └── config.go
 ├── internal/
