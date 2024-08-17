@@ -1,0 +1,9 @@
+all: true
+testonly: false
+inpackage: true
+with-expecter: true
+packages:
+  github.com/felixyeboah/huma-auth/sql:
+    config:
+      recursive: true
+      all: True
