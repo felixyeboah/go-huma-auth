@@ -5,7 +5,7 @@ createdb:
 	docker exec -it authentication createdb --username=root --owner=root auth
 
 dropdb:
-	docker exec -it authentication dropdb spices-api
+	docker exec -it authentication dropdb auth
 
 migrateup:
 	migrate -path migrations -database "postgresql://root:secret@localhost:5435/auth?sslmode=disable" -verbose up
