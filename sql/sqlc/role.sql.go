@@ -30,19 +30,20 @@ func (q *Queries) GetRole(ctx context.Context, id uuid.UUID) (Role, error) {
 }
 
 const getRoleByName = `-- name: GetRoleByName :one
-SELECT id, name, description, created_at, updated_at FROM roles
+SELECT id, name, description
+FROM roles
 WHERE name = $1 LIMIT 1
 `
 
-func (q *Queries) GetRoleByName(ctx context.Context, name string) (Role, error) {
+type GetRoleByNameRow struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+}
+
+func (q *Queries) GetRoleByName(ctx context.Context, name string) (GetRoleByNameRow, error) {
 	row := q.db.QueryRowContext(ctx, getRoleByName, name)
-	var i Role
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
+	var i GetRoleByNameRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
 	return i, err
 }
