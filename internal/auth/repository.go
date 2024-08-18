@@ -4,54 +4,81 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	db "huma-auth/sql/sqlc"
+	"huma-auth/sql/sqlc"
+	"log"
 )
 
 type Repository struct {
-	Queries db.Querier
+	*db.Queries
+	db *sql.DB
 }
 
-func NewRepository(queries db.Querier) Repository {
-	return Repository{
-		Queries: queries,
+func NewRepository(database *sql.DB) *Repository {
+	return &Repository{
+		Queries: db.New(database),
+		db:      database,
 	}
 }
 
 // CreateUser adds a new user
-func (repo *Repository) CreateUser(ctx context.Context, user User) (*db.User, error) {
+func (repo *Repository) CreateUser(ctx context.Context, args UserRequest) (*UserResponse, error) {
+	var createdUser *UserResponse
+
 	// Check if user exists
-	existingUser, err := repo.Queries.GetUserByEmail(ctx, user.Email)
-	if err == nil && errors.Is(err, sql.ErrNoRows) {
-		return nil, err
-	} else if existingUser.Email != "" {
-		return nil, errors.New("user already exists")
-	}
+	err := db.ExecTX(ctx, repo.db, func(tx *sql.Tx) error {
+		if tx == nil {
+			return errors.New("transaction is nil")
+		}
+		queries := db.New(tx) // Create a new queries instance with the transaction
 
-	// Check if role exists
-	role, err := repo.Queries.GetRoleByName(ctx, user.RoleName)
-	if err != nil {
-		return nil, err
-	}
-	// Create a user
-	u, err := repo.Queries.CreateUser(ctx, db.CreateUserParams{
-		Name:        user.Name,
-		Email:       user.Email,
-		PhoneNumber: user.PhoneNumber,
-		Password:    user.Password,
-		RoleID:      role.ID,
+		existingUser, err := queries.GetUserByEmail(ctx, args.Email)
+		if err == nil && errors.Is(err, sql.ErrNoRows) {
+			return err
+		} else if existingUser.Email != "" {
+			return errors.New("user already exists")
+		}
+
+		// Check if role exists
+		role, err := queries.GetRoleByName(ctx, args.RoleName)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return errors.New("role not found")
+			}
+			return err
+		}
+
+		// Create a user
+		createdUserDB, err := queries.CreateUser(ctx, db.CreateUserParams{
+			Name:        args.Name,
+			Email:       args.Email,
+			PhoneNumber: args.PhoneNumber,
+			Password:    args.Password,
+			RoleID:      role.ID,
+		})
+		if err != nil {
+			return errors.New("failed to create user")
+		}
+
+		createdUser = &UserResponse{
+			ID:          createdUserDB.ID,
+			Name:        createdUserDB.Name,
+			Email:       createdUserDB.Email,
+			PhoneNumber: createdUserDB.PhoneNumber,
+			RoleID:      createdUserDB.RoleID,
+			IsVerified:  createdUserDB.IsVerified,
+			CreatedAt:   createdUserDB.CreatedAt,
+			UpdatedAt:   createdUserDB.UpdatedAt,
+		}
+
+		// TODO: generate a validation token, save in redis and send to the user via email
+
+		return nil
 	})
+
 	if err != nil {
-		return nil, errors.New("failed to create user")
+		log.Printf("error creating user: %v", err)
+		return &UserResponse{}, err
 	}
 
-	// TODO: generate a validation token, save in redis and send to the user via email
-
-	return &db.User{
-		ID:          u.ID,
-		Name:        u.Name,
-		Email:       u.Email,
-		PhoneNumber: u.PhoneNumber,
-		RoleID:      role.ID,
-		IsVerified:  u.IsVerified,
-	}, nil
+	return createdUser, nil
 }
