@@ -61,8 +61,8 @@ go-huma-auth/
 ├── migrations/
 │   └── 001_create_users_table.sql
 ├── pkg/
-│   ├── db/
-│   │   ├── db.go
+│   ├── database/
+│   │   ├── database.go
 │   └── utils/
 │       └── utils.go
 ├── sql
