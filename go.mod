@@ -3,7 +3,8 @@ module huma-auth
 go 1.22
 
 require (
-	github.com/danielgtaylor/huma/v2 v2.20.0
+	github.com/danielgtaylor/huma/v2 v2.21.0
+	github.com/go-chi/chi/v5 v5.0.12
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
@@ -14,7 +15,6 @@ require (
 require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.6.0 // indirect
-	github.com/go-chi/chi/v5 v5.0.12 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
