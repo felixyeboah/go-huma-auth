@@ -2,6 +2,7 @@ package utils
 
 import (
 	"database/sql"
+	"math/rand"
 	"time"
 )
 
@@ -43,4 +44,16 @@ func ConvertBoolToSQLNullBool(b bool) sql.NullBool {
 		Bool:  b,
 		Valid: true,
 	}
+}
+
+var letterRunes = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890asdfghjklqwertyuiozxcvbnm@")
+
+// RandomString generates random string
+func RandomString(size int) string {
+	b := make([]rune, size)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+
+	return string(b)
 }
