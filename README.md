@@ -53,7 +53,9 @@ go-huma-auth/
 │   └── config.go
 ├── internal/
 │   ├── auth/
+│   │   ├── auth_test.go
 │   │   ├── handler.go
+│   │   ├── model.go
 │   │   ├── repository.go
 │   │   ├── service.go
 │   └── middleware/
