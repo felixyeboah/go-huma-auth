@@ -49,10 +49,19 @@ func main() {
 		log.Fatalf("Could not run migrations: %v", err)
 	}
 
+	c := huma.DefaultConfig("Auth API", "1.0.0")
+	c.Components.SecuritySchemes = map[string]*huma.SecurityScheme{
+		"bearer": {
+			Type:         "http",
+			Scheme:       "bearer",
+			BearerFormat: "JWT",
+		},
+	}
+
 	// Create a new router & API
 	cli := humacli.New(func(hooks humacli.Hooks, options *Options) {
 		router := chi.NewMux()
-		api := humachi.New(router, huma.DefaultConfig("Auth API", "1.0.0"))
+		api := humachi.New(router, c)
 
 		// Register Routes
 		auth.RegisterHandlers(api)

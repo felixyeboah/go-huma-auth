@@ -23,3 +23,22 @@ type VerifyOutput struct {
 		Message string
 	}
 }
+
+type LoginUserInput struct {
+	Body struct {
+		Email     string `json:"email" doc:"User email to login" example:"user@example.com"`
+		Password  string `json:"password" doc:"User password" example:"password"`
+		UserAgent string `json:"user_agent,omitempty" doc:"User user agent" example:"user-agent"`
+		IPAddress string `json:"ip_address,omitempty" doc:"User IP address" example:"127.0.0.1"`
+	}
+}
+
+type LoginUserOutput struct {
+	Body struct {
+		AccessToken  string       `json:"access_token"`
+		RefreshToken string       `json:"refresh_token"`
+		User         UserResponse `json:"user"`
+		Status       int          `json:"status"`
+		Message      string       `json:"message"`
+	}
+}
