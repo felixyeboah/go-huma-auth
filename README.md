@@ -30,7 +30,7 @@ This project is a RESTful API built using Go, leveraging the Huma and Chi librar
 Make sure you have PostgreSQL installed.
 Create a database and run the migrations located in the migrations/ directory.
 
-3. **Install Dependencies:*
+3. **Install Dependencies:**
 
 ```bash
   go mod tidy
