@@ -2,9 +2,9 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"github.com/danielgtaylor/huma/v2"
 	"huma-auth/internal/session"
-	"huma-auth/pkg/database"
 	"huma-auth/pkg/redis"
 	"huma-auth/pkg/token"
 	"huma-auth/pkg/utils"
@@ -18,7 +18,8 @@ func (m *LoginUserInput) Resolve(ctx huma.Context) []error {
 	return nil
 }
 
-func RegisterHandlers(api huma.API) {
+func RegisterHandlers(api huma.API, database *sql.DB) {
+
 	// init token make
 	tokenMaker, err := token.NewPasetoMaker(utils.RandomString(32))
 	if err != nil {
@@ -30,10 +31,10 @@ func RegisterHandlers(api huma.API) {
 	redisClient := redis.NewStore(client)
 
 	// init session
-	s := session.NewRepository(database.Database, tokenMaker)
+	s := session.NewRepository(database, tokenMaker)
 
 	//auth
-	authRepo := NewRepository(database.Database, tokenMaker, redisClient, s)
+	authRepo := NewRepository(database, tokenMaker, redisClient, s)
 	authService := NewService(authRepo)
 
 	huma.Register(api, huma.Operation{

@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"huma-auth/config"
 )
 
 func newDB(dataSourceName string) (*sql.DB, error) {
@@ -15,15 +16,16 @@ func newDB(dataSourceName string) (*sql.DB, error) {
 	return db, nil
 }
 
-var Database *sql.DB
-
-func Connect(db string) (*sql.DB, error) {
-	dbase, err := newDB(db)
+func Connect() (*sql.DB, error) {
+	env, err := config.Env()
 	if err != nil {
 		return nil, err
 	}
 
-	Database = dbase
+	dbase, err := newDB(env.DatabaseUrl)
+	if err != nil {
+		return nil, err
+	}
 
 	return dbase, nil
 }

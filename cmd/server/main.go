@@ -26,14 +26,14 @@ type Options struct {
 
 func main() {
 	// env config
-	env, err := config.LoadConfig(".")
+	env, err := config.Env()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	dbase, err := database.Connect(env.DatabaseUrl)
+	dbase, err := database.Connect()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	// Close the dbase connection
@@ -64,7 +64,7 @@ func main() {
 		api := humachi.New(router, c)
 
 		// Register Routes
-		auth.RegisterHandlers(api)
+		auth.RegisterHandlers(api, dbase)
 
 		hooks.OnStart(func() {
 			fmt.Printf("Starting server on port %d...\n", options.Port)
