@@ -5,7 +5,6 @@ import (
 	"github.com/resend/resend-go/v2"
 	"huma-auth/config"
 	"log"
-	"os"
 )
 
 func SendVerificationEmail(email, userID, verificationToken, path string) error {
@@ -17,7 +16,7 @@ func SendVerificationEmail(email, userID, verificationToken, path string) error 
 
 	client := resend.NewClient(env.ResendApiKey)
 
-	url := os.Getenv(env.VerificationLink)
+	url := env.VerificationLink
 	verificationLink := fmt.Sprintf(url+"/"+path+"?userID=%s&token=%s", userID, verificationToken)
 
 	subject := "Email Verification"

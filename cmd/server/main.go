@@ -1,37 +1,113 @@
 package main
 
 import (
-	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
-	"github.com/go-chi/chi/v5"
-	"net/http"
-
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
+	"github.com/danielgtaylor/huma/v2/humacli"
+	"github.com/go-chi/chi/v5"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/lib/pq"
+	"huma-auth/config"
+	"huma-auth/internal/auth"
+	"huma-auth/pkg/database"
+	"log"
+	"net/http"
 )
 
-// GreetingOutput represents the greeting operation response.
-type GreetingOutput struct {
-	Body struct {
-		Message string `json:"message" example:"Hello, world!" doc:"Greeting message"`
-	}
+type Options struct {
+	Port int `help:"Port to listen on" short:"p" default:"8080"`
 }
 
 func main() {
-	// Create a new router & API
-	router := chi.NewMux()
-	api := humachi.New(router, huma.DefaultConfig("Auth API", "1.0.0"))
+	// env config
+	env, err := config.LoadConfig(".")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Register GET /greeting/{name} handler.
-	huma.Get(api, "/greeting/{name}", func(ctx context.Context, input *struct {
-		Name string `path:"name" maxLength:"30" example:"world" doc:"Name to greet"`
-	}) (*GreetingOutput, error) {
-		resp := &GreetingOutput{}
-		resp.Body.Message = fmt.Sprintf("Hello, %s!", input.Name)
-		return resp, nil
+	dbase, err := database.Connect(env.DatabaseUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Close the dbase connection
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(dbase)
+
+	err = runMigrations(env.DatabaseUrl)
+	if err != nil {
+		log.Fatalf("Could not run migrations: %v", err)
+	}
+
+	// Create a new router & API
+	cli := humacli.New(func(hooks humacli.Hooks, options *Options) {
+		router := chi.NewMux()
+		api := humachi.New(router, huma.DefaultConfig("Auth API", "1.0.0"))
+
+		// Register Routes
+		auth.RegisterHandlers(api)
+
+		hooks.OnStart(func() {
+			fmt.Printf("Starting server on port %d...\n", options.Port)
+			err := http.ListenAndServe(fmt.Sprintf(":%d", options.Port), router)
+			if err != nil {
+				log.Fatal(err)
+			}
+		})
 	})
 
 	// Start the server!
-	http.ListenAndServe("127.0.0.1:8888", router)
+	cli.Run()
+}
+
+// runMigrations applies all the migrations from the specified directory
+func runMigrations(dataSourceName string) error {
+	// Connect to the database for migration
+	dbase, err := sql.Open("postgres", dataSourceName)
+	if err != nil {
+		return err
+	}
+	defer func(dbase *sql.DB) {
+		err := dbase.Close()
+		if err != nil {
+
+		}
+	}(dbase)
+
+	// Set up file-based source driver
+	sourceURL := "file://migrations"
+	sourceDriver, err := (&file.File{}).Open(sourceURL)
+	if err != nil {
+		return err
+	}
+
+	// Set up the PostgreSQL database driver
+	dbDriver, err := postgres.WithInstance(dbase, &postgres.Config{})
+	if err != nil {
+		return err
+	}
+
+	// Create a new migrate instance
+	m, err := migrate.NewWithInstance("file", sourceDriver, "postgres", dbDriver)
+	if err != nil {
+		return err
+	}
+
+	// Run migrations
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return err
+	}
+
+	log.Println("Migrations ran successfully.")
+	return nil
 }
