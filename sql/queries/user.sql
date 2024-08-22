@@ -12,3 +12,8 @@ INSERT INTO users(
 -- name: GetUserByEmail :one
 SELECT * from users
 WHERE email = $1 LIMIT 1;
+
+-- name: VerifyUser :exec
+UPDATE users
+SET is_verified = true
+WHERE id = $1;

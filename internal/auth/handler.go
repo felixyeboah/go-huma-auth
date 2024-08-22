@@ -50,6 +50,30 @@ func RegisterHandlers(api huma.API) {
 			UpdatedAt:   u.UpdatedAt,
 		}
 
-		return &RegisterOutput{Body: createdUser}, nil
+		resp := &RegisterOutput{}
+		resp.Body.User = createdUser
+		resp.Body.Status = http.StatusCreated
+		resp.Body.Message = "User successfully created!"
+
+		return resp, nil
+	})
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "verify-user",
+		Method:        http.MethodGet,
+		Path:          "/api/v1/auth/verify",
+		Summary:       "Verifies a user",
+		Description:   "Verifies a user grabbing their user ID and token from the params",
+		Tags:          []string{"Verify"},
+		DefaultStatus: http.StatusCreated,
+	}, func(ctx context.Context, input *VerifyInput) (*VerifyOutput, error) {
+		err := authService.VerifyUser(ctx, input.UserId, input.Token)
+		if err != nil {
+			return nil, huma.Error400BadRequest(err.Error(), err)
+		}
+		resp := &VerifyOutput{}
+		resp.Body.Status = http.StatusOK
+		resp.Body.Message = "User has been successfully verified!"
+		return resp, nil
 	})
 }
