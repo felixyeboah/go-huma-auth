@@ -4,20 +4,25 @@ import (
 	"context"
 	"github.com/danielgtaylor/huma/v2"
 	"huma-auth/pkg/database"
+	"huma-auth/pkg/redis"
+	"huma-auth/pkg/token"
+	"huma-auth/pkg/utils"
 	"net/http"
 )
 
-type RegisterOutput struct {
-	Body UserResponse
-}
-
-type RegisterInput struct {
-	Body UserRequest
-}
-
 func RegisterHandlers(api huma.API) {
+	// init token make
+	tokenMaker, err := token.NewPasetoMaker(utils.RandomString(32))
+	if err != nil {
+		panic(err)
+	}
+
+	//init redis
+	client := redis.NewRedisClient()
+	redisClient := redis.NewStore(client)
+
 	//auth
-	authRepo := NewRepository(database.Database)
+	authRepo := NewRepository(database.Database, tokenMaker, redisClient)
 	authService := NewService(authRepo)
 
 	huma.Register(api, huma.Operation{

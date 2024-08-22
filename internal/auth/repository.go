@@ -4,19 +4,27 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"huma-auth/pkg/redis"
+	"huma-auth/pkg/resend"
+	"huma-auth/pkg/token"
 	"huma-auth/sql/sqlc"
 	"log"
+	"time"
 )
 
 type Repository struct {
 	*db.Queries
-	db *sql.DB
+	db         *sql.DB
+	tokenMaker *token.PasetoMaker
+	redis      *redis.Store
 }
 
-func NewRepository(database *sql.DB) *Repository {
+func NewRepository(database *sql.DB, tokenMaker *token.PasetoMaker, redis *redis.Store) *Repository {
 	return &Repository{
-		Queries: db.New(database),
-		db:      database,
+		Queries:    db.New(database),
+		db:         database,
+		tokenMaker: tokenMaker,
+		redis:      redis,
 	}
 }
 
@@ -70,8 +78,23 @@ func (repo *Repository) CreateUser(ctx context.Context, args UserRequest) (*User
 			UpdatedAt:   createdUserDB.UpdatedAt,
 		}
 
-		// TODO: generate a validation token, save in redis and send to the user via email
+		// generate verification token
+		verificationToken, err := repo.tokenMaker.CreateToken(createdUser.ID.String(), args.RoleName, 15*time.Minute)
+		if err != nil {
+			return err
+		}
 
+		// store verification token in redis
+		err = repo.redis.StoreToken(ctx, createdUser.ID.String(), verificationToken, 15*time.Minute)
+		if err != nil {
+			return errors.New("failed to store verification token")
+		}
+
+		// send email with the token
+		err = resend.SendVerificationEmail(createdUser.Email, createdUser.ID.String(), verificationToken, "auth/verify")
+		if err != nil {
+			return errors.New("failed to send verification email")
+		}
 		return nil
 	})
 
