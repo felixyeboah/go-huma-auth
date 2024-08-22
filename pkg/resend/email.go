@@ -17,7 +17,7 @@ func SendVerificationEmail(email, userID, verificationToken, path string) error 
 	client := resend.NewClient(env.ResendApiKey)
 
 	url := env.VerificationLink
-	verificationLink := fmt.Sprintf(url+"/"+path+"?userID=%s&token=%s", userID, verificationToken)
+	verificationLink := fmt.Sprintf(url+"/"+path+"?user_id=%s&token=%s", userID, verificationToken)
 
 	subject := "Email Verification"
 	body := fmt.Sprintf("Please verify your email using this link: %s", verificationLink)

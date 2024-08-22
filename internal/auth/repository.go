@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/google/uuid"
 	"huma-auth/pkg/redis"
 	"huma-auth/pkg/resend"
 	"huma-auth/pkg/token"
@@ -104,4 +105,39 @@ func (repo *Repository) CreateUser(ctx context.Context, args UserRequest) (*User
 	}
 
 	return createdUser, nil
+}
+
+// VerifyUser verify user with their email
+func (repo *Repository) VerifyUser(ctx context.Context, userId, token string) error {
+	// get the token from redis with the userID
+	verificationToken, err := repo.redis.GetToken(ctx, userId)
+	if err != nil {
+		return errors.New("failed to get token")
+	}
+
+	if verificationToken != token {
+		return errors.New("invalid token")
+	}
+
+	// verify the token with paseto and if it's valid, we move on
+	_, err = repo.tokenMaker.VerifyToken(token)
+	if err != nil {
+		return errors.New("failed to verify token")
+	}
+
+	userID := uuid.MustParse(userId)
+
+	// now, verify user with the id
+	err = repo.Queries.VerifyUser(ctx, userID)
+	if err != nil {
+		return errors.New("failed to verify user")
+	}
+
+	// delete the token from redis
+	err = repo.redis.DeleteToken(ctx, userId)
+	if err != nil {
+		return errors.New("failed to delete token")
+	}
+
+	return nil
 }

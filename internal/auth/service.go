@@ -36,3 +36,7 @@ func (svc *Service) RegisterUser(ctx context.Context, user UserRequest) (*UserRe
 		UpdatedAt:   u.UpdatedAt,
 	}, nil
 }
+
+func (svc *Service) VerifyUser(ctx context.Context, userId, token string) error {
+	return svc.Repository.VerifyUser(ctx, userId, token)
+}

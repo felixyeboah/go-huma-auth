@@ -8,10 +8,9 @@ import (
 type UserRequest struct {
 	Name        string `json:"name" maxLength:"50" example:"John Doe" doc:"Register a user's name" required:"true"`
 	Email       string `json:"email" example:"johndoe@example.com" doc:"Register a user's email" required:"true"`
-	PhoneNumber string `json:"phone_number" minimum:"10" example:"1381234567" doc:"Register a user's phone number" required
-:"true"`
-	Password string `json:"password" example:"123456" doc:"Register a user's password" required:"true"`
-	RoleName string `json:"role_name" example:"admin" doc:"Register a user's role"  required:"true" enum:"user,admin"`
+	PhoneNumber string `json:"phone_number" minimum:"10" example:"1381234567" doc:"Register a user's phone number" required:"true"`
+	Password    string `json:"password" minimum:"8" example:"123456" doc:"Register a user's password" required:"true"`
+	RoleName    string `json:"role_name" example:"admin" doc:"Register a user's role"  required:"true" enum:"user,admin"`
 }
 
 type UserResponse struct {
