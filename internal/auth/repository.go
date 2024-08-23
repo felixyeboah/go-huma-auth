@@ -234,7 +234,7 @@ func (repo *Repository) ForgotPassword(ctx context.Context, email string) error 
 		return errors.New("failed to store token")
 	}
 
-	// send an email to the user
+	// email the user
 	err = resend.SendVerificationEmail(user.Email, user.ID.String(), t, "auth/forgot-password")
 	if err != nil {
 		return errors.New("failed to send verification email")
