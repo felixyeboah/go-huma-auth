@@ -47,7 +47,7 @@ func (repo *Repository) CreateUser(ctx context.Context, args UserRequest) (*User
 
 		existingUser, err := queries.GetUserByEmail(ctx, args.Email)
 		if err == nil && errors.Is(err, sql.ErrNoRows) {
-			return err
+			return errors.New("user with this email already exists")
 		} else if existingUser.Email != "" {
 			return errors.New("user already exists")
 		}
@@ -58,7 +58,7 @@ func (repo *Repository) CreateUser(ctx context.Context, args UserRequest) (*User
 			if errors.Is(err, sql.ErrNoRows) {
 				return errors.New("role not found")
 			}
-			return err
+			return errors.New("error getting role")
 		}
 
 		// Create a user
@@ -87,7 +87,7 @@ func (repo *Repository) CreateUser(ctx context.Context, args UserRequest) (*User
 		// generate verification token
 		verificationToken, err := repo.tokenMaker.CreateToken(createdUser.ID.String(), args.RoleName, 15*time.Minute)
 		if err != nil {
-			return err
+			return errors.New("failed to create verification token")
 		}
 
 		// store verification token in redis
@@ -199,4 +199,46 @@ func (repo *Repository) LoginUser(ctx context.Context, args LoginUserRequest) (*
 			UpdatedAt:   user.UpdatedAt,
 		},
 	}, nil
+}
+
+func (repo *Repository) ForgotPassword(ctx context.Context, email string) error {
+	// fetch user from db
+	user, err := repo.Queries.GetUserByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return errors.New("user not found")
+		}
+
+		return errors.New("failed to get user")
+	}
+
+	// get user role
+	role, err := repo.Queries.GetRole(ctx, user.RoleID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return errors.New("role not found")
+		}
+
+		return errors.New("failed to get role")
+	}
+
+	// generate reset token
+	t, err := repo.tokenMaker.CreateToken(user.ID.String(), role.Name, 15*time.Minute)
+	if err != nil {
+		return errors.New("failed to create token")
+	}
+
+	// store token in redis
+	err = repo.redis.StoreToken(ctx, user.ID.String(), t, 15*time.Minute)
+	if err != nil {
+		return errors.New("failed to store token")
+	}
+
+	// email the user
+	err = resend.SendVerificationEmail(user.Email, user.ID.String(), t, "auth/forgot-password")
+	if err != nil {
+		return errors.New("failed to send verification email")
+	}
+
+	return nil
 }

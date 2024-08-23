@@ -44,3 +44,7 @@ func (svc *Service) VerifyUser(ctx context.Context, userId, token string) error 
 func (svc *Service) LoginUser(ctx context.Context, args LoginUserRequest) (*LoginResponse, error) {
 	return svc.Repository.LoginUser(ctx, args)
 }
+
+func (svc *Service) ForgotPassword(ctx context.Context, email string) error {
+	return svc.Repository.ForgotPassword(ctx, email)
+}

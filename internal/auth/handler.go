@@ -117,4 +117,26 @@ func RegisterHandlers(api huma.API, database *sql.DB) {
 
 		return resp, nil
 	})
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "forgot-password",
+		Method:        http.MethodPost,
+		Path:          "/api/v1/auth/forgot-password",
+		Summary:       "User forgets password",
+		Description:   "User gets to generate a token to create a new password",
+		Tags:          []string{"Forgot password"},
+		DefaultStatus: http.StatusOK,
+	}, func(ctx context.Context, input *ForgotPasswordInput) (*ForgotPasswordOutput, error) {
+		err := authService.ForgotPassword(ctx, input.Body.Email)
+		if err != nil {
+			return nil, huma.Error400BadRequest(err.Error(), err)
+		}
+
+		resp := &ForgotPasswordOutput{}
+		resp.Body.Status = http.StatusOK
+		resp.Body.Message = "Password reset link sent successfully!"
+		//Password reset successfully
+
+		return resp, nil
+	})
 }

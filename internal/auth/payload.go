@@ -42,3 +42,16 @@ type LoginUserOutput struct {
 		Message      string       `json:"message"`
 	}
 }
+
+type ForgotPasswordInput struct {
+	Body struct {
+		Email string `json:"email" doc:"User email to forgot" example:"user@example.com"`
+	}
+}
+
+type ForgotPasswordOutput struct {
+	Body struct {
+		Status  int    `json:"status"`
+		Message string `json:"message"`
+	}
+}
