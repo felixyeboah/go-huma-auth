@@ -48,8 +48,8 @@ CREATE INDEX idx_users_role_id ON users(role_id);
 -- Create sessions table
 CREATE TABLE "sessions" (
                             "id" uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-                            "access_token" VARCHAR(255) UNIQUE NOT NULL, -- Unique token for the session
-                            "refresh_token" VARCHAR(255) UNIQUE NOT NULL, -- Unique refresh token
+                            "access_token" TEXT UNIQUE NOT NULL, -- Unique token for the session
+                            "refresh_token" TEXT UNIQUE NOT NULL, -- Unique refresh token
                             "user_id" uuid NOT NULL, -- Allow multiple sessions per user
                             "expiry_date" TIMESTAMPTZ NOT NULL, -- Use TIMESTAMPTZ for timezone support
                             "user_agent" TEXT, -- Store the user agent of the client

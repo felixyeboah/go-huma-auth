@@ -23,3 +23,16 @@ type UserResponse struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
+
+type LoginUserRequest struct {
+	Email     string `json:"email" example:"johndoe@example.com"`
+	Password  string `json:"password" example:"123456"`
+	UserAgent string `json:"user_agent"`
+	IPAddress string `json:"ip_address"`
+}
+
+type LoginResponse struct {
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token"`
+	User         UserResponse `json:"user"`
+}

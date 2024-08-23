@@ -40,3 +40,7 @@ func (svc *Service) RegisterUser(ctx context.Context, user UserRequest) (*UserRe
 func (svc *Service) VerifyUser(ctx context.Context, userId, token string) error {
 	return svc.Repository.VerifyUser(ctx, userId, token)
 }
+
+func (svc *Service) LoginUser(ctx context.Context, args LoginUserRequest) (*LoginResponse, error) {
+	return svc.Repository.LoginUser(ctx, args)
+}

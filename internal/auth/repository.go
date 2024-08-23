@@ -5,27 +5,32 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/google/uuid"
+	"huma-auth/internal/session"
 	"huma-auth/pkg/redis"
 	"huma-auth/pkg/resend"
 	"huma-auth/pkg/token"
+	"huma-auth/pkg/utils"
 	"huma-auth/sql/sqlc"
 	"log"
 	"time"
 )
 
 type Repository struct {
-	*db.Queries
+	Queries    *db.Queries
 	db         *sql.DB
 	tokenMaker *token.PasetoMaker
 	redis      *redis.Store
+	session    *session.Repository
 }
 
-func NewRepository(database *sql.DB, tokenMaker *token.PasetoMaker, redis *redis.Store) *Repository {
+func NewRepository(database *sql.DB, tokenMaker *token.PasetoMaker, redis *redis.Store,
+	session *session.Repository) *Repository {
 	return &Repository{
 		Queries:    db.New(database),
 		db:         database,
 		tokenMaker: tokenMaker,
 		redis:      redis,
+		session:    session,
 	}
 }
 
@@ -115,6 +120,7 @@ func (repo *Repository) VerifyUser(ctx context.Context, userId, token string) er
 		return errors.New("failed to get token")
 	}
 
+	// check if verification token is same as token from the param
 	if verificationToken != token {
 		return errors.New("invalid token")
 	}
@@ -125,6 +131,7 @@ func (repo *Repository) VerifyUser(ctx context.Context, userId, token string) er
 		return errors.New("failed to verify token")
 	}
 
+	//parse user id from string to uuid
 	userID := uuid.MustParse(userId)
 
 	// now, verify user with the id
@@ -140,4 +147,56 @@ func (repo *Repository) VerifyUser(ctx context.Context, userId, token string) er
 	}
 
 	return nil
+}
+
+func (repo *Repository) LoginUser(ctx context.Context, args LoginUserRequest) (*LoginResponse, error) {
+	// fetch user with email
+	user, err := repo.Queries.GetUserByEmail(ctx, args.Email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+
+	err = utils.CheckPasswordHash(user.Password, args.Password)
+	if err != nil {
+		return nil, errors.New("invalid credentials")
+	}
+
+	// get the user role
+	role, err := repo.Queries.GetRole(ctx, user.RoleID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("role not found")
+		}
+
+		return nil, err
+	}
+
+	// create a session for the user
+	s, err := repo.session.CreateSession(ctx, session.Payload{
+		UserId:    user.ID,
+		UserAgent: args.UserAgent,
+		Role:      role.Name,
+		IPAddress: args.IPAddress,
+	})
+	if err != nil {
+		return nil, errors.New("failed to create session")
+	}
+
+	return &LoginResponse{
+		AccessToken:  s.AccessToken,
+		RefreshToken: s.RefreshToken,
+		User: UserResponse{
+			ID:          user.ID,
+			Name:        user.Name,
+			Email:       user.Email,
+			PhoneNumber: user.PhoneNumber,
+			RoleID:      user.RoleID,
+			IsVerified:  user.IsVerified,
+			CreatedAt:   user.CreatedAt,
+			UpdatedAt:   user.UpdatedAt,
+		},
+	}, nil
 }

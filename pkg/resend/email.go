@@ -9,7 +9,7 @@ import (
 
 func SendVerificationEmail(email, userID, verificationToken, path string) error {
 	// env config
-	env, err := config.LoadConfig("../../")
+	env, err := config.Env()
 	if err != nil {
 		log.Fatal(err)
 	}

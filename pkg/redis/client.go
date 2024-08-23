@@ -11,7 +11,7 @@ var ctx = context.Background()
 
 func NewRedisClient() *redis.Client {
 	// env config
-	env, err := config.LoadConfig("../../")
+	env, err := config.Env()
 	if err != nil {
 		log.Fatal(err)
 	}
