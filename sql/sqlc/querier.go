@@ -16,6 +16,7 @@ type Querier interface {
 	GetRole(ctx context.Context, id uuid.UUID) (Role, error)
 	GetRoleByName(ctx context.Context, name string) (GetRoleByNameRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
+	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error
 	VerifyUser(ctx context.Context, id uuid.UUID) error
 }
 

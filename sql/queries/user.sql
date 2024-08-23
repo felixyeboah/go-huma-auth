@@ -17,3 +17,8 @@ WHERE email = $1 LIMIT 1;
 UPDATE users
 SET is_verified = true
 WHERE id = $1;
+
+-- name: UpdatePassword :exec
+UPDATE users
+SET password = $2
+WHERE id = $1;

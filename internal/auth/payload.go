@@ -55,3 +55,19 @@ type ForgotPasswordOutput struct {
 		Message string `json:"message"`
 	}
 }
+
+type ResetPasswordInput struct {
+	UserId string `query:"user_id" doc:"Get user ID from the query param" example:"yy872y2-sbhbsd-eryjndsa
+-2378y4"`
+	Token string `query:"token" doc:"Get token from the query param" example:"nbdkjdnddu908ue2jnsjdn98u3kjnkndnd"`
+	Body  struct {
+		Password string `json:"password" minimum:"8" example:"123456" doc:"Register a user's password" required:"true"`
+	}
+}
+
+type ResetPasswordOutput struct {
+	Body struct {
+		Status  int    `json:"status"`
+		Message string `json:"message"`
+	}
+}

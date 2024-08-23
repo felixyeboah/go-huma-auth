@@ -235,9 +235,51 @@ func (repo *Repository) ForgotPassword(ctx context.Context, email string) error 
 	}
 
 	// email the user
-	err = resend.SendVerificationEmail(user.Email, user.ID.String(), t, "auth/forgot-password")
+	err = resend.SendVerificationEmail(user.Email, user.ID.String(), t, "auth/reset-password")
 	if err != nil {
 		return errors.New("failed to send verification email")
+	}
+
+	return nil
+}
+
+func (repo *Repository) ResetPassword(ctx context.Context, args ResetPasswordRequest) error {
+	// get token from redis
+	verificationToken, err := repo.redis.GetToken(ctx, args.UserID.String())
+	if err != nil {
+		return errors.New("failed to get token")
+	}
+
+	// check if tokens are same
+	if verificationToken != args.Token {
+		return errors.New("invalid token")
+	}
+
+	// verify token
+	_, err = repo.tokenMaker.VerifyToken(args.Token)
+	if err != nil {
+		return errors.New("failed to verify token")
+	}
+
+	// hash password
+	hashedPassword, err := utils.HashPassword(args.Password)
+	if err != nil {
+		return errors.New("failed to hash password")
+	}
+
+	// update user
+	err = repo.Queries.UpdatePassword(ctx, db.UpdatePasswordParams{
+		ID:       args.UserID,
+		Password: hashedPassword,
+	})
+	if err != nil {
+		return errors.New("failed to update password")
+	}
+
+	// delete token from redis
+	err = repo.redis.DeleteToken(ctx, args.UserID.String())
+	if err != nil {
+		return errors.New("failed to delete token")
 	}
 
 	return nil

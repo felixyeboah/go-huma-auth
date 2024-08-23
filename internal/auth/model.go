@@ -36,3 +36,9 @@ type LoginResponse struct {
 	RefreshToken string       `json:"refresh_token"`
 	User         UserResponse `json:"user"`
 }
+
+type ResetPasswordRequest struct {
+	UserID   uuid.UUID `json:"user_id"`
+	Token    string    `json:"token"`
+	Password string    `json:"password"`
+}

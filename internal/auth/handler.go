@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/google/uuid"
 	"huma-auth/internal/session"
 	"huma-auth/pkg/redis"
 	"huma-auth/pkg/token"
@@ -135,7 +136,32 @@ func RegisterHandlers(api huma.API, database *sql.DB) {
 		resp := &ForgotPasswordOutput{}
 		resp.Body.Status = http.StatusOK
 		resp.Body.Message = "Password reset link sent successfully!"
-		//Password reset successfully
+
+		return resp, nil
+	})
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "reset-password",
+		Method:        http.MethodPost,
+		Path:          "/api/v1/auth/reset-password",
+		Summary:       "User resets password",
+		Description:   "User creates new password",
+		Tags:          []string{"Reset password"},
+		DefaultStatus: http.StatusOK,
+	}, func(ctx context.Context, input *ResetPasswordInput) (*ResetPasswordOutput, error) {
+		userID := uuid.MustParse(input.UserId)
+		err := authService.ResetPassword(ctx, ResetPasswordRequest{
+			UserID:   userID,
+			Token:    input.Token,
+			Password: input.Body.Password,
+		})
+		if err != nil {
+			return nil, huma.Error400BadRequest(err.Error(), err)
+		}
+
+		resp := &ResetPasswordOutput{}
+		resp.Body.Status = http.StatusOK
+		resp.Body.Message = "Password reset successfully!"
 
 		return resp, nil
 	})

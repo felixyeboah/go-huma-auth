@@ -48,3 +48,7 @@ func (svc *Service) LoginUser(ctx context.Context, args LoginUserRequest) (*Logi
 func (svc *Service) ForgotPassword(ctx context.Context, email string) error {
 	return svc.Repository.ForgotPassword(ctx, email)
 }
+
+func (svc *Service) ResetPassword(ctx context.Context, args ResetPasswordRequest) error {
+	return svc.Repository.ResetPassword(ctx, args)
+}
