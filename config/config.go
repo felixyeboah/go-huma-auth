@@ -17,18 +17,21 @@ type Config struct {
 }
 
 // LoadConfig loads the application configuration from the environment variables
-func LoadConfig(path string) (config Config, err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("app")
-	viper.SetConfigType("env")
+func LoadConfig(path string) (Config, error) {
+	var config Config
 
+	viper.AddConfigPath(path)
+	viper.SetConfigName("app") // Ensure this matches the config file name without the extension
+	viper.SetConfigType("env") // Adjust this if you're using a different format (yaml, json, etc.)
 	viper.AutomaticEnv()
 
-	err = viper.ReadInConfig()
-	if err != nil {
-		return
+	if err := viper.ReadInConfig(); err != nil {
+		return config, err
 	}
 
-	err = viper.Unmarshal(&config)
-	return
+	if err := viper.Unmarshal(&config); err != nil {
+		return config, err
+	}
+
+	return config, nil
 }
