@@ -145,3 +145,81 @@ func TestLogin(t *testing.T) {
 		t.Fatalf("Unexpected status code: %d", resp.Code)
 	}
 }
+
+func TestForgotPassword(t *testing.T) {
+	_, api := humatest.New(t)
+	dbase, err := database.Connect()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Close the dbase connection
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(dbase)
+
+	RegisterHandlers(api, dbase)
+
+	resp := api.PostCtx(ctx, "/api/v1/auth/forgot-password", map[string]string{
+		"email": "mail@example.com",
+	})
+
+	if resp.Code != 200 {
+		t.Fatalf("Unexpected status code: %d", resp.Code)
+	}
+}
+
+func TestForgotPasswordError(t *testing.T) {
+	_, api := humatest.New(t)
+	dbase, err := database.Connect()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Close the dbase connection
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(dbase)
+
+	RegisterHandlers(api, dbase)
+
+	resp := api.PostCtx(ctx, "/api/v1/auth/forgot-password", map[string]string{
+		"email": "mail@example.io",
+	})
+
+	if resp.Code != 422 {
+		t.Fatalf("Unexpected status code: %d", resp.Code)
+	}
+}
+
+func TestResetPassword(t *testing.T) {
+	_, api := humatest.New(t)
+	dbase, err := database.Connect()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Close the dbase connection
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(dbase)
+
+	RegisterHandlers(api, dbase)
+
+	resp := api.PostCtx(ctx, "/api/v1/auth/reset-password", map[string]string{
+		"password": "secure-password",
+	})
+
+	if resp.Code != 200 {
+		t.Fatalf("Unexpected status code: %d", resp.Code)
+	}
+}
